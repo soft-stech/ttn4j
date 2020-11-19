@@ -1,0 +1,94 @@
+
+s
+java:S4165"_Remove this useless assignment; "b" already holds the assigned value along all execution paths.(á»ÑÅ
+s
+java:S4165"_Remove this useless assignment; "b" already holds the assigned value along all execution paths.(á»ÑÅ
+d	java:S117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¢˜ä
+d	java:S117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¬ÐÓ×
+i	java:S117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Òè…èýÿÿÿÿ
+e
+java:S3008"RRename this field "_insert" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ãÉÈ+
+k
+java:S3008"RRename this field "_delete" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(²¯ˆ©ùÿÿÿÿ
+f
+java:S3008"RRename this field "_update" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(úžÕõ
+r
+java:S3008"^Rename this field "_insertNonTableChar" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ú¶È­
+r
+java:S3008"^Rename this field "_deleteNonTableChar" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ç¡‘ù
+w
+java:S3008"^Rename this field "_updateNonTableChar" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(«˜Äæûÿÿÿÿ
+1
+java:S1118"Hide this public constructor.(®Ä¨Š
+a	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ëä®ë
+a	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ªÂþ±
+K
+java:S1854"7Remove this useless assignment to local variable "buf".(üÊ
+f
+java:S3776"RRefactor this method to reduce its Cognitive Complexity from 20 to the 15 allowed.(ªÂþ±
+8
+java:S1659"Declare "n" on a separate line.(à™®Ùÿÿÿÿÿ
+3
+java:S1659"Declare "j" on a separate line.(„¸ó­
+3
+java:S1659"Declare "a" on a separate line.(„¸ó­
+3
+java:S1659"Declare "b" on a separate line.(„¸ó­
+9
+java:S1659" Declare "c2" on a separate line.(ë‹íýÿÿÿÿ
+A
+java:S1659"(Declare "costDelete" on a separate line.(Þ°¸šûÿÿÿÿ
+A
+java:S1659"(Declare "costUpdate" on a separate line.(Þ°¸šûÿÿÿÿ
+a	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¬ÐÓ×
+f	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Òè…èýÿÿÿÿ
+K
+java:S1854"7Remove this useless assignment to local variable "buf".(üÊ
+k
+java:S3776"RRefactor this method to reduce its Cognitive Complexity from 25 to the 15 allowed.(Òè…èýÿÿÿÿ
+8
+java:S1659"Declare "n" on a separate line.(à™®Ùÿÿÿÿÿ
+3
+java:S1659"Declare "j" on a separate line.(„¸ó­
+3
+java:S1659"Declare "a" on a separate line.(„¸ó­
+3
+java:S1659"Declare "b" on a separate line.(„¸ó­
+9
+java:S1659" Declare "c2" on a separate line.(ë‹íýÿÿÿÿ
+A
+java:S1659"(Declare "costDelete" on a separate line.(Þ°¸šûÿÿÿÿ
+A
+java:S1659"(Declare "costUpdate" on a separate line.(Þ°¸šûÿÿÿÿ
+=
+java:S3010"$Remove this assignment of "_insert".(Ê§‘¬ùÿÿÿÿ
+=
+java:S3010"$Remove this assignment of "_delete".(³Ùä±þÿÿÿÿ
+=
+java:S3010"$Remove this assignment of "_update".(„Ù©Žúÿÿÿÿ
+I
+java:S3010"0Remove this assignment of "_insertNonTableChar".(ÛâÜöøÿÿÿÿ
+I
+java:S3010"0Remove this assignment of "_deleteNonTableChar".(¡ÈØóøÿÿÿÿ
+I
+java:S3010"0Remove this assignment of "_updateNonTableChar".(¤ó·Þÿÿÿÿÿ
+f
+java:S3776"RRefactor this method to reduce its Cognitive Complexity from 24 to the 15 allowed.(®Ä¨Š
+:
+java:S1659"!Declare "row" on a separate line.(µµýýÿÿÿÿ
+>
+java:S1659"%Declare "maxCost" on a separate line.(¥Áí÷ùÿÿÿÿ
+T	java:S125"<This block of commented-out lines of code should be removed.(Â¹ìêÿÿÿÿÿ
+T	java:S125"<This block of commented-out lines of code should be removed.(Â¹ìêÿÿÿÿÿ
+r
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(Ê§‘¬ùÿÿÿÿ
+r
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(³Ùä±þÿÿÿÿ
+r
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(„Ù©Žúÿÿÿÿ
+f	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¤ƒï×úÿÿÿÿ
+a	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ö¾Øª
+<
+java:S1481"(Remove this unused "buf" local variable.(üÊ
+<
+java:S1481"(Remove this unused "buf" local variable.(üÊ
