@@ -13,7 +13,11 @@ public class RussianNumberTokens {
         return TOKENS;
     }
 
-    private static final Map<String, Numeral> TOKENS = new HashMap<String, Numeral>();
+    private RussianNumberTokens() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    private static final Map<String, Numeral> TOKENS = new HashMap<>();
 
     static {
         TOKENS.put(new String("лит".getBytes(), StandardCharsets.UTF_8), new Numeral(1337, 4, false));

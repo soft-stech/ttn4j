@@ -38,7 +38,7 @@ public class RussianNumberParserResult {
     /// <param name="error"> ошибка распознавания </param>
     public RussianNumberParserResult(long value, double error) {
         this.value = value;
-        this.error = 0;
+        this.error = error;
     }
 
 
@@ -49,7 +49,7 @@ public class RussianNumberParserResult {
 
 
 
-    public static RussianNumberParserResult GetFailed() {
+    public static RussianNumberParserResult getFailed() {
         return failed;
     }
 

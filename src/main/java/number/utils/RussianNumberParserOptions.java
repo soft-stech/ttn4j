@@ -16,7 +16,7 @@ public class RussianNumberParserOptions {
     /// <summary>
     /// настройки по умолчанию
     /// </summary>
-    public static RussianNumberParserOptions GetDefault()
+    public static RussianNumberParserOptions getDefault()
     {
         if(defaultOptions == null) defaultOptions = new RussianNumberParserOptions();
         return defaultOptions;

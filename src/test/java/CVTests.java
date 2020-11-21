@@ -38,7 +38,7 @@ class CVTests {
         var value = testData.get(repetitionInfo.getCurrentRepetition() - 1);
         System.out.println("=====================");
         System.out.println(String.format("test[%d] - %d:%s", repetitionInfo.getCurrentRepetition(),value.Value,value.Text) );
-        var parsed = RussianNumber.Parse(value.Text);
+        var parsed = RussianNumber.parse(value.Text);
         assertEquals(value.Value, parsed.getValue(), value.Text);
         System.out.println("passed");
     }
@@ -49,7 +49,7 @@ class CVTests {
         var value = testData.get(53);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
-        var parsed = RussianNumber.Parse(value.Text);
+        var parsed = RussianNumber.parse(value.Text);
         assertEquals(value.Value, parsed.getValue(), value.Text);
     }
 
