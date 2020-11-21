@@ -1,68 +1,72 @@
 package number.utils;
 
 
+import com.sun.tools.javac.util.ArrayUtils;
 import lombok.var;
 import number.utils.beans.RussianNumberTokens;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class RussianNumber {
 
-    private static int MAX_TOKEN_LENGTH = 13;
-
-    public static RussianNumberParserResult Parse(String text) {
-        return Parse(text, new RussianNumberParserOptions());
+    private RussianNumber() {
+        throw new IllegalStateException("Utility class");
     }
 
-    public static List<NumericToken> NumericTokens(String text, RussianNumberParserOptions options) {
+    private static final int MAX_TOKEN_LENGTH = 13;
+
+    public static RussianNumberParserResult parse(String text) {
+        return parse(text, new RussianNumberParserOptions());
+    }
+
+    public static List<NumericToken> numericTokens(String text, RussianNumberParserOptions options) {
         // разбиваем текст на токены
-        var stringTokens = text.split("\\s+"); // TODO _rgSplitter.Split(text);
+        var stringTokens = text.split("\\s+");
         var tokens = new ArrayList<NumericToken>(stringTokens.length);
-        var D = new RefContainer<double[][]>(new double[2][MAX_TOKEN_LENGTH]);
+        var matrix = new RefContainer<double[][]>(new double[2][MAX_TOKEN_LENGTH]);
 
         // обрабатываем токены
         for (var item : stringTokens) {
-            tokens.addAll(ParseTokens(item, options, D, 0));
+            tokens.addAll(parseTokens(item, options, matrix, 0));
         }
         return tokens;
     }
 
-    public static RussianNumberParserResult Parse(String text, RussianNumberParserOptions options) {
+    public static RussianNumberParserResult parse(String text, RussianNumberParserOptions options) {
         if (options == null) {
             options = new RussianNumberParserOptions();
         }
 
-        if (text.isEmpty()) return RussianNumberParserResult.GetFailed();
+        if (text.isEmpty()) return RussianNumberParserResult.getFailed();
         text = text.trim().toLowerCase();
 
 
         // вспомогательные переменные
-        Long globalLevel = null, localLevel = null;
-        Long globalValue = null, localValue = null;
+        Long globalLevel = null;
+        Long localLevel = null;
+        Long globalValue = null;
+        Long localValue = null;
         boolean wasCriticalError = false;
 
-        var tokens = NumericTokens(text, options);
+        var tokens = numericTokens(text, options);
         // цикл по токенам
         int n = tokens.size();
         for (int i = 0; i < n; i++) {
-                var token = tokens.get(i);
+            var token = tokens.get(i);
             if (token.getError() > options.getMaxTokenError()) continue;
 
             var tokenValue = token.getValue();
             var value = tokenValue.getValue();
             var level = tokenValue.getLevel();
             var multiplier = tokenValue.isMultiplier();
-            if(level == -1){
+            if (level == -1) {
                 var buf = localValue;
                 localValue = 0l;
-                for(var t = 0; t< buf; t++){
-                   localValue = Long.valueOf(String.format("%s%s", (localValue != null ? localValue.toString() : ""), value));
+                for (var t = 0; t < buf; t++) {
+                    localValue = Long.valueOf(String.format("%s%s", (localValue != null ? localValue.toString() : ""), value));
 
                 }
-            } else
-            if (multiplier) {
+            } else if (multiplier) {
                 // множитель
 
                 if (globalLevel == null || globalLevel > level) {
@@ -107,7 +111,7 @@ public class RussianNumber {
             if (x.getError() == 0.0d) x.setError(1d);
         });
 
-        double totalError = Arrays.stream(doubleStreamErrors).mapToDouble(e -> e.getError()).average().getAsDouble();
+        double totalError = Arrays.stream(doubleStreamErrors).mapToDouble(NumericToken::getError).average().getAsDouble();
         if (wasCriticalError) {
             // имело место критическая ошибка
             if (totalError >= 0.5) totalError = 1;
@@ -125,9 +129,9 @@ public class RussianNumber {
     /// <param name="D"> матрица </param>
     /// <param name="level"> уровень рекурсии </param>
     /// <returns></returns>
-    private static List<NumericToken> ParseTokens(String str, RussianNumberParserOptions options, RefContainer<double[][]> D, int level) {
+    private static List<NumericToken> parseTokens(String str, RussianNumberParserOptions options, RefContainer<double[][]> matrix, int level) {
 
-        var numeral = TOKENS.getOrDefault(str, null);
+        var numeral = tokens.getOrDefault(str, null);
         if (numeral != null) {
             Numeral finalNumeral3 = numeral;
             return new ArrayList<NumericToken>() {{
@@ -145,8 +149,8 @@ public class RussianNumber {
             var variants = complexParsing ? new ArrayList<ArrayList<NumericToken>>() : null;
 
             // вспомогательные переменные
-            double minimalError, error;
-
+            double minimalError;
+            double error;
             ////////////////////////////////////////////////////////////////
             // односложная фраза
             ////////////////////////////////////////////////////////////////
@@ -155,17 +159,10 @@ public class RussianNumber {
                 // пытаемся распознать с помощью расстояния Левенштейна
                 minimalError = Double.POSITIVE_INFINITY;
 
-               for (var item : TOKENS.entrySet()
-                       .stream().sorted(Comparator.comparingLong(x -> x.getValue().getValue())
-               ).toArray()) {
-
-                    var t = (Map.Entry<String, Numeral>) item;
-                    error = NumeralLevenshtein.CompareStrings(str, t.getKey(), D, true);
-                //    System.out.println(String.format("parsed %s, %e", item, error));
+                for (var item : tokens.entrySet()) {
+                    error = NumeralLevenshtein.compareStrings(str, item.getKey(), matrix, true);
                     if (error < minimalError) {
-
-                        numeral = t.getValue();
-                //        System.out.println(String.format("\nChanged %s %s", item, numeral.getValue()));
+                        numeral = item.getValue();
                         minimalError = error;
                     }
                 }
@@ -207,14 +204,12 @@ public class RussianNumber {
             // строки длиной меньше шести смысла делить нет
             if (complexParsing) {
                 for (int i = 3; i <= length - 3; i++) {
-                    var left = ParseTokens(str.substring(0, i), options, D, level + 1);
-                    var right = ParseTokens(str.substring(i), options, D, level + 1);
+                    var left = parseTokens(str.substring(0, i), options, matrix, level + 1);
+                    var right = parseTokens(str.substring(i), options, matrix, level + 1);
 
-                    var union = new LinkedHashSet<NumericToken>() {{
-                        addAll(left);
-                        addAll(right);
-
-                    }};
+                    var union = new LinkedHashSet<NumericToken>();
+                    union.addAll(left);
+                    union.addAll(right);
                     if (union.size() > 0) {
                         if (union.stream().map(e -> e.getError()).reduce(0.0, Double::sum) != 0)  //.Sum(e = > e.GetError()) !=0)
                         {
@@ -252,11 +247,6 @@ public class RussianNumber {
     }
 
     /// <summary>
-    /// регулярка для деления строки на токены
-    /// </summary>
-   // private static final RegEx _rgSplitter = new RegEx("\\s+");
-
-    /// <summary>
     /// максимальная длина токена
     /// </summary>
 
@@ -264,68 +254,60 @@ public class RussianNumber {
     /// <summary>
     /// пустой массив токенов
     /// </summary>
-    private static final List<NumericToken> EMPTY_TOKEN_ARRAY = new ArrayList<NumericToken>();
+    private static final List<NumericToken> EMPTY_TOKEN_ARRAY = new ArrayList<>();
 
     /// <summary>
     /// хеш токенов
     /// </summary>
-    private static Map<String, Numeral> TOKENS = RussianNumberTokens.getTokens();
+    private static Map<String, Numeral> tokens = RussianNumberTokens.getTokens();
 
 
     /// <summary>
     /// наименования односложных числительных (мужской род)
     /// </summary>
-    private static final String[]_simple_units_male =
+    private static final String[] _simple_units_male =
 
-    {
-        "", "один ", "два ", "три ", "четыре ", "пять ", "шесть ",
-                "семь ", "восемь ", "девять ", "десять ", "одиннадцать ",
-                "двенадцать ", "тринадцать ", "четырнадцать ", "пятнадцать ",
-                "шестнадцать ", "семнадцать ", "восемнадцать ", "девятнадцать "
-    }
-
-    ;
+            {
+                    "", "один ", "два ", "три ", "четыре ", "пять ", "шесть ",
+                    "семь ", "восемь ", "девять ", "десять ", "одиннадцать ",
+                    "двенадцать ", "тринадцать ", "четырнадцать ", "пятнадцать ",
+                    "шестнадцать ", "семнадцать ", "восемнадцать ", "девятнадцать "
+            };
 
     /// <summary>
     /// наименования односложных числительных (женский род)
     /// </summary>
     private static final String[]
-    _simple_units_female =
+            _simple_units_female =
 
-    {
-        "", "одна ", "две ", "три ", "четыре ", "пять ", "шесть ",
-                "семь ", "восемь ", "девять ", "десять ", "одиннадцать ",
-                "двенадцать ", "тринадцать ", "четырнадцать ", "пятнадцать ",
-                "шестнадцать ", "семнадцать ", "восемнадцать ", "девятнадцать "
-    }
-
-    ;
+            {
+                    "", "одна ", "две ", "три ", "четыре ", "пять ", "шесть ",
+                    "семь ", "восемь ", "девять ", "десять ", "одиннадцать ",
+                    "двенадцать ", "тринадцать ", "четырнадцать ", "пятнадцать ",
+                    "шестнадцать ", "семнадцать ", "восемнадцать ", "девятнадцать "
+            };
 
     /// <summary>
     /// наименования десятков
     /// </summary>
     private static final String[]
-    _ten_units =
+            _ten_units =
 
-    {
-        "", "десять ", "двадцать ", "тридцать ", "сорок ", "пятьдесят ",
-                "шестьдесят ", "семьдесят ", "восемьдесят ", "девяносто "
-    }
-
-    ;
+            {
+                    "", "десять ", "двадцать ", "тридцать ", "сорок ", "пятьдесят ",
+                    "шестьдесят ", "семьдесят ", "восемьдесят ", "девяносто "
+            };
 
     /// <summary>
     /// наименования сотен
     /// </summary>
     private static final String[]
-    _hundred_units =
+            _hundred_units =
 
-    {
-        "", "сто ", "двести ", "триста ", "четыреста ",
-                "пятьсот ", "шестьсот ", "семьсот ", "восемьсот ", "девятьсот "
-    }
-
-    ;
+            {
+                    "", "сто ", "двести ", "триста ", "четыреста ",
+                    "пятьсот ", "шестьсот ", "семьсот ", "восемьсот ", "девятьсот "
+            };
 
     /// <summary>
     /// выбрать правильное падежное окончание существительного
@@ -335,7 +317,7 @@ public class RussianNumber {
     /// <param name="form2"> форма существительного от двух до четырёх </param>
     /// <param name="form3"> форма существительного от пяти и больше </param>
     /// <returns> возвращает существительное с падежным окончанием, которое соответсвует числу </returns>
-    private static String WordForm(long value, String form1, String form2, String form3) {
+    private static String wordForm(long value, String form1, String form2, String form3) {
         switch ((int) ((value % 100 > 20) ? value % 10 : value % 20)) {
             case 1:
                 return form1;
@@ -357,7 +339,7 @@ public class RussianNumber {
     /// <param name="form2"> форма существительного от двух до четырёх </param>
     /// <param name="form3"> форма существительного от пяти и больше </param>
     /// <returns></returns>
-    private static String ToString(long value, boolean male, String form1, String form2, String form3) {
+    private static String getStringValue(long value, boolean male, String form1, String form2, String form3) {
         var n = value % 1000;
 
         if (n == 0) return "";
@@ -376,7 +358,7 @@ public class RussianNumber {
             sb.append(units[(int) (n % 10)]);
         }
 
-        sb.append(WordForm(n, form1, form2, form3));
+        sb.append(wordForm(n, form1, form2, form3));
 
         if (sb.length() != 0) sb.append(" ");
         return sb.toString();
@@ -389,11 +371,11 @@ public class RussianNumber {
     /// <param name="capitalize"> указывает, что необходимо сделать первую букву заглавной </param>
     /// <returns> возвращает строковую запись числа </returns>
 
-    public static String ToString(long value) {
-       return ToString(value, true);
+    public static String getStringValue(long value) {
+        return getStringValue(value, true);
     }
 
-    public static String ToString(long value, boolean capitalize) {
+    public static String getStringValue(long value, boolean capitalize) {
         boolean minus = value < 0;
         if (minus) value = -value;
 
@@ -403,24 +385,24 @@ public class RussianNumber {
 
         if (n == 0) sb.append("ноль ");
         if (n % 1000 != 0) {
-            sb.append(ToString(n, true, "", "", ""));
+            sb.append(getStringValue(n, true, "", "", ""));
         }
 
         n /= 1000;
 
-        sb.insert(0, ToString(n, false, "тысяча", "тысячи", "тысяч"));
+        sb.insert(0, getStringValue(n, false, "тысяча", "тысячи", "тысяч"));
         n /= 1000;
 
-        sb.insert(0, ToString(n, true, "миллион", "миллиона", "миллионов"));
+        sb.insert(0, getStringValue(n, true, "миллион", "миллиона", "миллионов"));
         n /= 1000;
 
-        sb.insert(0, ToString(n, true, "миллиард", "миллиарда", "миллиардов"));
+        sb.insert(0, getStringValue(n, true, "миллиард", "миллиарда", "миллиардов"));
         n /= 1000;
 
-        sb.insert(0, ToString(n, true, "триллион", "триллиона", "триллионов"));
+        sb.insert(0, getStringValue(n, true, "триллион", "триллиона", "триллионов"));
         n /= 1000;
 
-        sb.insert(0, ToString(n, true, "квадриллион", "квадриллиона", "квадриллионов"));
+        sb.insert(0, getStringValue(n, true, "квадриллион", "квадриллиона", "квадриллионов"));
         if (minus) sb.insert(0, "минус ");
 
         // делаем первую букву заглавной
