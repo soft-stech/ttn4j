@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @Accessors(chain = true)
@@ -30,7 +27,7 @@ public class NumeralLevenshtein {
     /// <summary>
     /// таблица стоимости замены
     /// </summary>
-    private static Map<CharCartage, Double> _update;
+    private static Map<String, Double> _update;
 
     /// <summary>
     /// стоимость вставки нетабличного символа
@@ -129,12 +126,12 @@ public class NumeralLevenshtein {
         // вспомогательные переменные
         int i, j, a = 1, b = 0;
         char c1, c2;
-        if (D.GetValue()[0].length < 2 || D.GetValue()[1].length < n + 1) D.SetValue(new double[2][n + 1]);
+        if (D.getValue()[0].length < 2 || D.getValue()[1].length < n + 1) D.setValue(new double[2][n + 1]);
         else {
             // очищаем массив
             for (j = 0; j <= n; j++) {
-                D.GetValue()[0][j] = 0;
-                D.GetValue()[1][j] = 0;
+                D.getValue()[0][j] = 0;
+                D.getValue()[1][j] = 0;
             }
         }
         double costInsert, costDelete, costUpdate;
@@ -145,11 +142,11 @@ public class NumeralLevenshtein {
                     if (i == 0) {
                         // считаем стоимость вставки
                         costInsert = _insert.getOrDefault(s2.charAt(j - 1), _insertNonTableChar);
-                        D.GetValue()[1][j] = D.GetValue()[1][j - 1] + costInsert;
+                        D.getValue()[1][j] = D.getValue()[1][j - 1] + costInsert;
                     } else if (j == 0) {
                         // считаем стоимость удаления
                         costDelete = _delete.getOrDefault(s1.charAt(i - 1), _deleteNonTableChar);
-                        D.GetValue()[a][0] = D.GetValue()[b][0] + costDelete;
+                        D.getValue()[a][0] = D.getValue()[b][0] + costDelete;
                     } else {
                         c1 = s1.charAt(i - 1);
                         c2 = s2.charAt(j - 1);
@@ -157,26 +154,28 @@ public class NumeralLevenshtein {
                             // считаем стоимость удаления
                             costDelete = _delete.getOrDefault(c1, _deleteNonTableChar);
                             costInsert = _insert.getOrDefault(c2, _insertNonTableChar);
-                            costUpdate = _update.getOrDefault(new CharCartage(c1, c2), _updateNonTableChar);
+                            var key = String.format("%s%s", c1, c2);
+                            costUpdate = _update.getOrDefault(key,
+                                    _updateNonTableChar);
 
-                            D.GetValue()[a][j] = Math.min(Math.min(
-                                    D.GetValue()[b][j] + costDelete,
-                                    D.GetValue()[a][j - 1] + costInsert),
-                                    D.GetValue()[b][j - 1] + costUpdate
+                            D.getValue()[a][j] = Math.min(Math.min(
+                                    D.getValue()[b][j] + costDelete,
+                                    D.getValue()[a][j - 1] + costInsert),
+                                    D.getValue()[b][j - 1] + costUpdate
                             );
                         } else {
-                            D.GetValue()[a][j] = D.GetValue()[b][j - 1];
+                            D.getValue()[a][j] = D.getValue()[b][j - 1];
                         }
                     }
                 }
             }
             var buf = a;
             a = b;
-            b = a;
+            b = buf;
         }
 
-        return relative ? D.GetValue()[b][n] / n :
-                D.GetValue()[b][n];
+        return relative ? D.getValue()[b][n] / n :
+                D.getValue()[b][n];
     }
 
     private static ArrayList<String[]> readFromInputStream(InputStream inputStream)
@@ -186,8 +185,9 @@ public class NumeralLevenshtein {
                      = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                data.add(
-                        line.replace("\r", "").replace("\n", "").trim().split("\t"));
+                var trimed =  line.replace("\r", "").replace("\n", "");
+                var splited = trimed.split("\t");
+                data.add(splited);
 
             }
         }
@@ -217,17 +217,18 @@ public class NumeralLevenshtein {
         int n = data.get(0).length - 1, row = 0;
         double minCost = Double.POSITIVE_INFINITY, maxCost = 0;
 
-        _insert = new HashMap<Character, Double>(n);
-        _delete = new HashMap<Character, Double>(n);
-        _update = new HashMap<CharCartage, Double>(n * (n - 1));
+        _insert = new LinkedHashMap<Character, Double>(n);
+        _delete = new LinkedHashMap<Character, Double>(n);
+        _update = new LinkedHashMap<String, Double>(n * (n - 1));
 
         // читаем список символов
-        Character[] chars = Arrays.stream(data.get(row++)).map(e -> e.charAt(0)).toArray(Character[]::new);
+
+        Character[] chars = Arrays.stream(data.get(row++)).skip(1).map(e -> e.charAt(0)).toArray(Character[]::new);
 
         // INSERT
-        row++;
+
         var newArr1 = Arrays.stream(data.get(row)).skip(1).toArray(String[]::new);
-        for (var index = 1; index < newArr1.length; index++) {
+        for (var index = 0; index < newArr1.length; index++) {
             var value = Parse(newArr1[index]);
             _insert.put(chars[index], value);
             if (value < minCost) minCost = value;
@@ -237,33 +238,33 @@ public class NumeralLevenshtein {
         // DELETE
         row++;
         var newArr2 = Arrays.stream(data.get(row)).skip(1).toArray(String[]::new);
-        for (var index = 1; index < newArr2.length; index++) {
+        for (var index = 0; index < newArr2.length; index++) {
             try {
                 var value = Parse(newArr2[index]);
                 _delete.put(chars[index], value);
                 if (value < minCost) minCost = value;
                 if (value > maxCost) maxCost = value;
-            }catch (Exception ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
 
         }
-
-        // UPDATE
         row++;
+        // UPDATE
+
         var newArr3 = Arrays.stream(data.get(row)).skip(1).toArray(String[]::new);
         for (int i = 0; i < n; i++) {
 
-            for (var index = 1; index < newArr3.length; index++) {
+            for (var index = 0; index < newArr3.length; index++) {
                 if (i != index) {
                     var value = Parse(newArr3[index]);
-                    _update.put(new CharCartage(chars[i], chars[index]), value);
+                    _update.put(chars[i].toString() + chars[index].toString(), value);
                     if (value < minCost) minCost = value;
                     if (value > maxCost) maxCost = value;
                 }
             }
         }
-
+        row++;
         // прочие показатели
         _insertNonTableChar = maxCost;
         _deleteNonTableChar = minCost;
@@ -281,7 +282,7 @@ public class NumeralLevenshtein {
     }
 
     private static double Parse(String str, double defaultValue) {
-        if (str.length() == 0) {
+        if (str.isEmpty() || " ".equals(str)) {
             return defaultValue;
         } else {
             return Double.parseDouble(str);

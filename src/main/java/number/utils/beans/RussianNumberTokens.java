@@ -16,7 +16,19 @@ public class RussianNumberTokens {
     private static final Map<String, Numeral> TOKENS = new HashMap<String, Numeral>();
 
     static {
-        TOKENS.put(new String("ноль".getBytes(), StandardCharsets.UTF_8), new Numeral(0l, 1l, false));
+        TOKENS.put(new String("лит".getBytes(), StandardCharsets.UTF_8), new Numeral(1337, 4, false));
+        TOKENS.put(new String("нулей".getBytes(), StandardCharsets.UTF_8), new Numeral(0, -1, false));
+        TOKENS.put(new String("еденица".getBytes(), StandardCharsets.UTF_8), new Numeral(1, -1, false));
+        TOKENS.put(new String("двоек".getBytes(), StandardCharsets.UTF_8), new Numeral(2, -1, false));
+        TOKENS.put(new String("троек".getBytes(), StandardCharsets.UTF_8), new Numeral(3, -1, false));
+        TOKENS.put(new String("четверок".getBytes(), StandardCharsets.UTF_8), new Numeral(4, -1, false));
+        TOKENS.put(new String("пятерок".getBytes(), StandardCharsets.UTF_8), new Numeral(5, -1, false));
+        TOKENS.put(new String("шестерок".getBytes(), StandardCharsets.UTF_8), new Numeral(6, -1, false));
+        TOKENS.put(new String("семерок".getBytes(), StandardCharsets.UTF_8), new Numeral(7, -1, false));
+        TOKENS.put(new String("восьмерок".getBytes(), StandardCharsets.UTF_8), new Numeral(8, -1, false));
+        TOKENS.put(new String("девяток".getBytes(), StandardCharsets.UTF_8), new Numeral(9, -1, false));
+
+        TOKENS.put(new String("ноль".getBytes(), StandardCharsets.UTF_8), new Numeral(0, 1, false));
         TOKENS.put(new String("один".getBytes(), StandardCharsets.UTF_8), new Numeral(1, 1, false));
         TOKENS.put(new String("одна".getBytes(), StandardCharsets.UTF_8), new Numeral(1, 1, false));
         TOKENS.put(new String("два".getBytes(), StandardCharsets.UTF_8), new Numeral(2, 1, false));

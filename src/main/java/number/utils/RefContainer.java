@@ -1,5 +1,8 @@
 package number.utils;
 
+import lombok.Data;
+
+@Data
 public class RefContainer<T>
 {
     public RefContainer(T value)
@@ -9,12 +12,12 @@ public class RefContainer<T>
 
     private T value;
 
-    public T GetValue()
+    public T getValue()
     {
         return value;
     }
 
-    public void SetValue(T value)
+    public void setValue(T value)
     {
         this.value = value;
     }

@@ -13,3 +13,9 @@ i
 9src/main/java/number/utils/RussianNumberParserResult.java,5\f\5fed030741897a20420f0b59d18fed541e8cf934
 b
 2src/main/java/number/utils/NumeralLevenshtein.java,a\1\a10f0d144aaf737ab235f9b49c9185173b75de18
+i
+9src/main/java/number/utils/beans/RussianNumberTokens.java,6\a\6a057cddd9d257d94bdf717022835f129408b04c
+]
+-src/main/java/number/utils/RussianNumber.java,f\0\f0e4c4a74c38a5bdfe2f1390e49e3f06f05e94b3
+J
+src/test/java/CVTests.java,4\a\4ab787335f2708fac5d0d7c6341dff2955400bc8

@@ -5,6 +5,7 @@ import lombok.var;
 import number.utils.beans.RussianNumberTokens;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RussianNumber {
@@ -41,17 +42,26 @@ public class RussianNumber {
         Long globalLevel = null, localLevel = null;
         Long globalValue = null, localValue = null;
         boolean wasCriticalError = false;
+
         var tokens = NumericTokens(text, options);
         // цикл по токенам
         int n = tokens.size();
         for (int i = 0; i < n; i++) {
-            var token = tokens.get(i);
+                var token = tokens.get(i);
             if (token.getError() > options.getMaxTokenError()) continue;
 
             var tokenValue = token.getValue();
             var value = tokenValue.getValue();
             var level = tokenValue.getLevel();
             var multiplier = tokenValue.isMultiplier();
+            if(level == -1){
+                var buf = localValue;
+                localValue = 0l;
+                for(var t = 0; t< buf; t++){
+                   localValue = Long.valueOf(String.format("%s%s", (localValue != null ? localValue.toString() : ""), value));
+
+                }
+            } else
             if (multiplier) {
                 // множитель
 
@@ -78,7 +88,7 @@ public class RussianNumber {
 
                     token.setSignificant(true);
                 } else if (localLevel == level) {
-                    localValue = Long.valueOf(String.format("%d%d", (localValue != null ? localValue.toString() : ""), value));
+                    localValue = Long.valueOf(String.format("%s%s", (localValue != null ? localValue.toString() : ""), value));
                     localLevel = level;
                     token.setSignificant(true);
                 } else {
@@ -145,10 +155,17 @@ public class RussianNumber {
                 // пытаемся распознать с помощью расстояния Левенштейна
                 minimalError = Double.POSITIVE_INFINITY;
 
-                for (var item : TOKENS.keySet()) {
-                    error = NumeralLevenshtein.CompareStrings(str, item, D, true);
+               for (var item : TOKENS.entrySet()
+                       .stream().sorted(Comparator.comparingLong(x -> x.getValue().getValue())
+               ).toArray()) {
+
+                    var t = (Map.Entry<String, Numeral>) item;
+                    error = NumeralLevenshtein.CompareStrings(str, t.getKey(), D, true);
+                //    System.out.println(String.format("parsed %s, %e", item, error));
                     if (error < minimalError) {
-                        numeral = TOKENS.get(item);
+
+                        numeral = t.getValue();
+                //        System.out.println(String.format("\nChanged %s %s", item, numeral.getValue()));
                         minimalError = error;
                     }
                 }
@@ -193,7 +210,7 @@ public class RussianNumber {
                     var left = ParseTokens(str.substring(0, i), options, D, level + 1);
                     var right = ParseTokens(str.substring(i), options, D, level + 1);
 
-                    var union = new HashSet<NumericToken>() {{
+                    var union = new LinkedHashSet<NumericToken>() {{
                         addAll(left);
                         addAll(right);
 
