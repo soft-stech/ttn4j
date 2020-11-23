@@ -1,8 +1,3 @@
-
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.var;
 import number.utils.RussianNumber;
 
 import org.junit.jupiter.api.*;
@@ -17,22 +12,15 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Data
-@AllArgsConstructor
-class TestData {
-    public long Value;
-    public String Text;
-}
 
 class CVTests {
-    private final Charset UTF8_CHARSET = Charset.forName("UTF-8");
+    private final Charset UTF8_CHARSET = StandardCharsets.UTF_8;
 
     private static ArrayList<TestData> testData = null;
 
-    private final static int SIZE = 63;
+    private final static int SIZE = 66;
 
     @RepeatedTest(value = SIZE, name = "SimpleTest {currentRepetition}/{totalRepetitions}")
-        //size of testData
     void repeatedTests(RepetitionInfo repetitionInfo) {
 
         var value = testData.get(repetitionInfo.getCurrentRepetition() - 1);
@@ -43,20 +31,58 @@ class CVTests {
         System.out.println("passed");
     }
 
+    @RepeatedTest(value = SIZE, name = "SimpleTest {currentRepetition}/{totalRepetitions}")
+    void parseFromNumbersToTextTest(RepetitionInfo repetitionInfo) {
+
+        var value = testData.get(repetitionInfo.getCurrentRepetition() - 1);
+        System.out.println("=====================");
+        System.out.println(String.format("test[%d] - %d:%s", repetitionInfo.getCurrentRepetition(),value.Value,value.Text) );
+        var parsed = RussianNumber.getStringValue(value.Value);
+        System.out.println(String.format("number - %s: input - %s: out - %s",value.Value, value.Text, new String(parsed.getBytes(), UTF8_CHARSET)));
+        assertEquals(value.Value, RussianNumber.parse(parsed).getValue());
+        System.out.println("passed");
+    }
+
+
     @Test
     void numberTest() {
-
-        var value = testData.get(53);
+        var position = 56;
+        var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
         var parsed = RussianNumber.parse(value.Text);
         assertEquals(value.Value, parsed.getValue(), value.Text);
     }
 
+    @Test
+    void parseNumbersToTextSingleTest(){
+        parseFromNumbersToTextTest(new RepetitionInfo() {
+            @Override
+            public int getCurrentRepetition() {
+                return 54;
+            }
 
+            @Override
+            public int getTotalRepetitions() {
+                return 0;
+            }
+        });
+    }
+
+    @Test
+    void CycleRun(){
+        for(int i = 0; i < 10; i++){
+            var value = new TestData(i, "");
+            System.out.println("=====================");
+            System.out.println(String.format("test[%d] - %d:%s", i ,value.Value,value.Text) );
+            var parsed = RussianNumber.getStringValue(value.Value);
+            System.out.println(String.format("number - %s: input - %s: out - %s",value.Value, value.Text, new String(parsed.getBytes(), UTF8_CHARSET)));
+            assertEquals(value.Value, RussianNumber.parse(parsed).getValue());
+            System.out.println("passed");
+        }
+    }
 
     static {
-
         Class testsClass = CVTests.class;
         try (InputStream inputStream = testsClass.getResourceAsStream("/TestData.txt")) {
             testData = readFromInputStream(inputStream);
