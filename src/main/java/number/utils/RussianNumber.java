@@ -1,11 +1,12 @@
 package number.utils;
 
-
-import com.sun.tools.javac.util.ArrayUtils;
-import lombok.var;
 import number.utils.beans.RussianNumberTokens;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 
 public class RussianNumber {
 
@@ -23,11 +24,9 @@ public class RussianNumber {
         // разбиваем текст на токены
         var stringTokens = text.split("\\s+");
         var tokens = new ArrayList<NumericToken>(stringTokens.length);
-        var matrix = new RefContainer<double[][]>(new double[2][MAX_TOKEN_LENGTH]);
-
         // обрабатываем токены
         for (var item : stringTokens) {
-            tokens.addAll(parseTokens(item, options, matrix, 0));
+            tokens.addAll(parseTokens(item, options,0));
         }
         return tokens;
     }
@@ -37,7 +36,9 @@ public class RussianNumber {
             options = new RussianNumberParserOptions();
         }
 
-        if (text.isEmpty()) return RussianNumberParserResult.getFailed();
+        if (text.isEmpty()) {
+            return RussianNumberParserResult.getFailed();
+        }
         text = text.trim().toLowerCase();
 
 
@@ -50,21 +51,34 @@ public class RussianNumber {
 
         var tokens = numericTokens(text, options);
         // цикл по токенам
-        int n = tokens.size();
-        for (int i = 0; i < n; i++) {
-            var token = tokens.get(i);
-            if (token.getError() > options.getMaxTokenError()) continue;
+        /* experemental branch
+        tokens.stream().forEach(x -> {
+            System.out.print(x.getNumeral().getLevel() + "" + (x.getNumeral().isMultiplier() ? "m" : "") + " ");
+        });
 
-            var tokenValue = token.getValue();
+        for(var index = 0; index < tokens.size(); index++){
+            var item = tokens.get(index);
+            if(item.getNumeral().getLevel() == -1){
+                var preElem = tokens.get(index - 1);
+                var val = String.valueOf(item.getNumeral().getValue()).repeat((int)preElem.getNumeral().getValue());
+                preElem.getNumeral().setValue(Long.parseLong(val));
+            }
+        }
+        */
+        for (NumericToken token : tokens) {
+            if (token.getError() > options.getMaxTokenError()) {
+                continue;
+            }
+            var tokenValue = token.getNumeral();
             var value = tokenValue.getValue();
             var level = tokenValue.getLevel();
             var multiplier = tokenValue.isMultiplier();
             if (level == -1) {
+                token.setSignificant(true);
                 var buf = localValue;
-                localValue = 0l;
+                localValue = 0L;
                 for (var t = 0; t < buf; t++) {
-                    localValue = Long.valueOf(String.format("%s%s", (localValue != null ? localValue.toString() : ""), value));
-
+                    localValue = Long.valueOf(String.format("%s%s", localValue.toString(), value));
                 }
             } else if (multiplier) {
                 // множитель
@@ -92,7 +106,7 @@ public class RussianNumber {
 
                     token.setSignificant(true);
                 } else if (localLevel == level) {
-                    localValue = Long.valueOf(String.format("%s%s", (localValue != null ? localValue.toString() : ""), value));
+                    localValue = Long.valueOf(String.format("%s%s", localValue.toString(), value));
                     localLevel = level;
                     token.setSignificant(true);
                 } else {
@@ -106,7 +120,7 @@ public class RussianNumber {
 
         // считаем общий уровень ошибки
         NumericToken[] doubleStreamErrors;
-        doubleStreamErrors = tokens.stream().filter(e -> e.isSignificant()).toArray(NumericToken[]::new);
+        doubleStreamErrors = tokens.stream().filter(NumericToken::isSignificant).toArray(NumericToken[]::new);
         Arrays.stream(doubleStreamErrors).forEach(x -> {
             if (x.getError() == 0.0d) x.setError(1d);
         });
@@ -129,7 +143,7 @@ public class RussianNumber {
     /// <param name="D"> матрица </param>
     /// <param name="level"> уровень рекурсии </param>
     /// <returns></returns>
-    private static List<NumericToken> parseTokens(String str, RussianNumberParserOptions options, RefContainer<double[][]> matrix, int level) {
+    private static List<NumericToken> parseTokens(String str, RussianNumberParserOptions options, int level) {
 
         var numeral = tokens.getOrDefault(str, null);
         if (numeral != null) {
@@ -158,29 +172,18 @@ public class RussianNumber {
             if (length <= MAX_TOKEN_LENGTH) {
                 // пытаемся распознать с помощью расстояния Левенштейна
                 minimalError = Double.POSITIVE_INFINITY;
-
                 for (var item : tokens.entrySet()) {
-                    error = NumeralLevenshtein.compareStrings(str, item.getKey(), matrix, true);
+                    error = NumeralLevenshtein.compareStrings(str, item.getKey(), true);
                     if (error < minimalError) {
                         numeral = item.getValue();
                         minimalError = error;
                     }
                 }
-
                 if (minimalError <= options.getMaxTokenError()) {
                     if (complexParsing) {
-                        // могут быть другие варианты
-                        Numeral finalNumeral = numeral;
-                        double finalMinimalError1 = minimalError;
-                        variants.add(new ArrayList<NumericToken>() {{
-                            add(new NumericToken(finalNumeral, finalMinimalError1));
-                        }});
+                        variants.add((ArrayList<NumericToken>) getNumericTokens(numeral, minimalError));
                     } else {
-                        Numeral finalNumeral1 = numeral;
-                        double finalMinimalError = minimalError;
-                        return new ArrayList<NumericToken>() {{
-                            add(new NumericToken(finalNumeral1, finalMinimalError));
-                        }};
+                        return getNumericTokens(numeral, minimalError);
                     }
                 } else if (!complexParsing) {
                     if (level == 0) {
@@ -188,11 +191,7 @@ public class RussianNumber {
                         return EMPTY_TOKEN_ARRAY;
                     } else {
                         // в рекурсии возвращаем плохие токены, чтобы они влияли на принятие решения
-                        Numeral finalNumeral2 = numeral;
-                        double finalMinimalError2 = minimalError;
-                        return new ArrayList<NumericToken>() {{
-                            add(new NumericToken(finalNumeral2, finalMinimalError2));
-                        }};
+                        return getNumericTokens(numeral, minimalError);
                     }
                 }
             }
@@ -203,53 +202,62 @@ public class RussianNumber {
 
             // строки длиной меньше шести смысла делить нет
             if (complexParsing) {
-                for (int i = 3; i <= length - 3; i++) {
-                    var left = parseTokens(str.substring(0, i), options, matrix, level + 1);
-                    var right = parseTokens(str.substring(i), options, matrix, level + 1);
-
-                    var union = new LinkedHashSet<NumericToken>();
-                    union.addAll(left);
-                    union.addAll(right);
-                    if (union.size() > 0) {
-                        if (union.stream().map(e -> e.getError()).reduce(0.0, Double::sum) != 0)  //.Sum(e = > e.GetError()) !=0)
-                        {
-                            // ухудшаем общий результат на некую величину
-                            union.stream().forEach(e -> e.setError(e.getError() + options.getSplitErrorValue() / union.size()));
-                        }
-
-                        // объединяем результат
-                        variants.add(new ArrayList<NumericToken>(union));
-                    }
-                }
+                devideInputedText(str, options,level, length, variants);
             }
-
-            ////////////////////////////////////////////////////////////////
-            // выбираем лучший вариант
-            ////////////////////////////////////////////////////////////////
-
-            if (variants.size() == 0) {
-                return EMPTY_TOKEN_ARRAY;
-            } else {
-                ArrayList<NumericToken> best = null;
-
-                minimalError = Double.POSITIVE_INFINITY;
-                for (var item : variants) {
-                    error = item.stream().map(e -> e.getError()).reduce(0.0, Double::sum);
-                    if (error < minimalError) {
-                        best = item;
-                        minimalError = error;
-                    }
-                }
-
-                return best != null ? best : EMPTY_TOKEN_ARRAY;
-            }
+            return getBestVariant(variants);
         }
     }
 
-    /// <summary>
-    /// максимальная длина токена
-    /// </summary>
+    private static List<NumericToken> getNumericTokens(Numeral numeral, double minimalError) {
+        return new ArrayList<NumericToken>() {{
+            add(new NumericToken(numeral, minimalError));
+        }};
+    }
 
+    private static List<NumericToken> getBestVariant(ArrayList<ArrayList<NumericToken>> variants) {
+        ////////////////////////////////////////////////////////////////
+        // выбираем лучший вариант
+        ////////////////////////////////////////////////////////////////
+        double minimalError;
+        double error;
+        if (variants == null || variants.isEmpty()) {
+            return EMPTY_TOKEN_ARRAY;
+        } else {
+            ArrayList<NumericToken> best = null;
+
+            minimalError = Double.POSITIVE_INFINITY;
+            for (var item : variants) {
+                error = item.stream().map(NumericToken::getError).reduce(0.0, Double::sum);
+                if (error < minimalError) {
+                    best = item;
+                    minimalError = error;
+                }
+            }
+
+            return best != null ? best : EMPTY_TOKEN_ARRAY;
+        }
+    }
+
+    private static void devideInputedText(String str, RussianNumberParserOptions options, int level, int length, ArrayList<ArrayList<NumericToken>> variants) {
+        for (int i = 3; i <= length - 3; i++) {
+            var left = parseTokens(str.substring(0, i), options,level + 1);
+            var right = parseTokens(str.substring(i), options,level + 1);
+
+            var union = new LinkedHashSet<NumericToken>();
+            union.addAll(left);
+            union.addAll(right);
+            if (union.size() > 0) {
+                if (union.stream().map(NumericToken::getError).reduce(0.0, Double::sum) != 0)  //.Sum(e = > e.GetError()) !=0)
+                {
+                    // ухудшаем общий результат на некую величину
+                    union.forEach(e -> e.setError(e.getError() + options.getSplitErrorValue() / union.size()));
+                }
+
+                // объединяем результат
+                variants.add(new ArrayList<>(union));
+            }
+        }
+    }
 
     /// <summary>
     /// пустой массив токенов
@@ -259,7 +267,7 @@ public class RussianNumber {
     /// <summary>
     /// хеш токенов
     /// </summary>
-    private static Map<String, Numeral> tokens = RussianNumberTokens.getTokens();
+    private static final Map<String, Numeral> tokens = RussianNumberTokens.getTokens();
 
 
     /// <summary>

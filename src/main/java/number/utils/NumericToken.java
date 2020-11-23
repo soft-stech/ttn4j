@@ -11,7 +11,7 @@ public class NumericToken {
     /// <summary>
     /// значение
     /// </summary>
-    private Numeral value;
+    private Numeral numeral;
 
     /// <summary>
     /// ошибка распознавания
@@ -23,12 +23,12 @@ public class NumericToken {
     /// </summary>
     private boolean isSignificant;
 
-    public NumericToken(Numeral value){
-        this(value, 0);
+    public NumericToken(Numeral numeral){
+        this(numeral, 0);
     }
 
-    public NumericToken(Numeral value, double error){
-       this.value = value;
+    public NumericToken(Numeral numeral, double error){
+       this.numeral = numeral;
        this.error = error;
     }
 }
