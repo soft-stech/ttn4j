@@ -60,50 +60,41 @@ public class NumeralLevenshtein {
     /**
      * определить степень похожести строк (расстояние Левенштейна)
      *
-     * @param s1       строка 1
-     * @param s2       строка 2
-     * @param relative указывает, что необходимо считать относительную похожесть
+     * @param firstString  строка 1
+     * @param secondString строка 2
+     * @param relative     указывает, что необходимо считать относительную похожесть
      * @return Значение расстояние Левенштейна для данных строк
      */
-    public static double compareStrings(String s1, String s2, boolean relative) {
-        int m = s1.length();
-        int n = s2.length();
-        s1 = s1.toLowerCase();
-        s2 = s2.toLowerCase();
-        int b = 0;
-        int a = 1;
-        double[][] matrix = new double[2][n + 1];
-        for (var i = 0; i <= m; i++) {
-            for (var j = 0; j <= n; j++) {
-                if (i != 0 || j != 0) {
+    public static double compareStrings(String firstString, String secondString, boolean relative) {
+        int firsStringLength = firstString.length();
+        int secondStringLength = secondString.length();
+        firstString = firstString.toLowerCase();
+        secondString = secondString.toLowerCase();
+        var b = 0;
+        var a = 1;
+        var matrix = new double[2][secondStringLength + 1];
+        for (var firsStringIndex = 0; firsStringIndex <= firsStringLength; firsStringIndex++) {
+            for (var secondStringIndex = 0; secondStringIndex <= secondStringLength; secondStringIndex++) {
+                if (firsStringIndex != 0 || secondStringIndex != 0) {
                     double costDelete;
                     double costInsert;
-                    if (i == 0) {
+                    if (firsStringIndex == 0) {
                         // считаем стоимость вставки
-                        costInsert = insert.getOrDefault(s2.charAt(j - 1), insertNonTableChar);
-                        matrix[1][j] = matrix[1][j - 1] + costInsert;
-                    } else if (j == 0) {
+                        costInsert = insert.getOrDefault(secondString.charAt(secondStringIndex - 1), insertNonTableChar);
+                        matrix[1][secondStringIndex] = matrix[1][secondStringIndex - 1] + costInsert;
+                    } else if (secondStringIndex == 0) {
                         // считаем стоимость удаления
-                        costDelete = delete.getOrDefault(s1.charAt(i - 1), deleteNonTableChar);
+                        costDelete = delete.getOrDefault(firstString.charAt(firsStringIndex - 1), deleteNonTableChar);
                         matrix[a][0] = matrix[b][0] + costDelete;
                     } else {
-                        char c1 = s1.charAt(i - 1);
-                        char c2 = s2.charAt(j - 1);
-                        if (c1 != c2) {
+                        char firstChar = firstString.charAt(firsStringIndex - 1);
+                        char secondChar = secondString.charAt(secondStringIndex - 1);
+                        calculateDeletionCost(matrix[b], a, matrix, secondStringIndex, firstChar, secondChar);
+                        if (firstChar != secondChar) {
                             // считаем стоимость удаления
-                            costDelete = delete.getOrDefault(c1, deleteNonTableChar);
-                            costInsert = insert.getOrDefault(c2, insertNonTableChar);
-                            String key = String.format("%s%s", c1, c2);
-                            var costUpdate = update.getOrDefault(key,
-                                    updateNonTableChar);
-
-                            matrix[a][j] = Math.min(Math.min(
-                                    matrix[b][j] + costDelete,
-                                    matrix[a][j - 1] + costInsert),
-                                    matrix[b][j - 1] + costUpdate
-                            );
+                            calculateDeletionCost(matrix[b], a, matrix, secondStringIndex, firstChar, secondChar);
                         } else {
-                            matrix[a][j] = matrix[b][j - 1];
+                            matrix[a][secondStringIndex] = matrix[b][secondStringIndex - 1];
                         }
                     }
                 }
@@ -112,7 +103,25 @@ public class NumeralLevenshtein {
             a = b;
             b = buf;
         }
-        return relative ? matrix[b][n] / n : matrix[b][n];
+        return relative ? matrix[b][secondStringLength] / secondStringLength : matrix[b][secondStringLength];
+    }
+
+    private static void calculateDeletionCost(double[] matrix1, int a, double[][] matrix, int j, char c1, char c2) {
+        var costDelete = delete.getOrDefault(c1, deleteNonTableChar);
+        var costInsert = insert.getOrDefault(c2, insertNonTableChar);
+        String key = String.format("%s%s", c1, c2);
+        var costUpdate = update.getOrDefault(key,
+                updateNonTableChar);
+
+        matrix[a][j] = minFromThree(
+                matrix1[j] + costDelete,
+                matrix[a][j - 1] + costInsert,
+                matrix1[j - 1] + costUpdate
+        );
+    }
+
+    private static double minFromThree(double first, double second, double third) {
+        return Math.min(Math.min(first, second), third);
     }
 
     private static ArrayList<String[]> readFromInputStream(InputStream inputStream)
@@ -192,6 +201,7 @@ public class NumeralLevenshtein {
 
     /**
      * Чтение файла
+     *
      * @return
      */
     @SneakyThrows
