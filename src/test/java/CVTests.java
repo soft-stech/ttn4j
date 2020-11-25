@@ -1,6 +1,8 @@
 import number.utils.RussianNumber;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,7 +48,7 @@ class CVTests {
 
     @Test
     void numberTest() {
-        var position = 56;
+        var position = 63;
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
@@ -71,12 +73,12 @@ class CVTests {
 
     @Test
     void CycleRun(){
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 10000; i++){
             var value = new TestData(i, "");
             System.out.println("=====================");
-            System.out.println(String.format("test[%d] - %d:%s", i ,value.Value,value.Text) );
+            System.out.printf("test[%d] - %d:%s%n", i ,value.Value,value.Text);
             var parsed = RussianNumber.getStringValue(value.Value);
-            System.out.println(String.format("number - %s: input - %s: out - %s",value.Value, value.Text, new String(parsed.getBytes(), UTF8_CHARSET)));
+            System.out.printf("number - %s: input - %s: out - %s%n",value.Value, value.Text, new String(parsed.getBytes(), UTF8_CHARSET));
             assertEquals(value.Value, RussianNumber.parse(parsed).getValue());
             System.out.println("passed");
         }
