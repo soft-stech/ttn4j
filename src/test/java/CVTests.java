@@ -20,7 +20,7 @@ class CVTests {
 
     private static ArrayList<TestData> testData = null;
 
-    private final static int SIZE = 66;
+    private final static int SIZE = 57;
 
     @RepeatedTest(value = SIZE, name = "SimpleTest {currentRepetition}/{totalRepetitions}")
     void repeatedTests(RepetitionInfo repetitionInfo) {
@@ -48,7 +48,7 @@ class CVTests {
 
     @Test
     void numberTest() {
-        var position = 63;
+        var position = 1;
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
