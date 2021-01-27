@@ -105,14 +105,20 @@ public class RussianNumber {
         Arrays.stream(doubleStreamErrors).forEach(x -> {
             if (x.getError() == 0.0d) x.setError(1d);
         });
+        var average = Arrays.stream(doubleStreamErrors).mapToDouble(NumericToken::getError).average();
+        double totalError;
+        if (average.isPresent()) {
+            totalError = average.getAsDouble();
+        } else {
+            totalError = 1.0;
+            wasCriticalError = true;
+        }
 
-        double totalError = Arrays.stream(doubleStreamErrors).mapToDouble(NumericToken::getError).average().getAsDouble();
         if (wasCriticalError) {
             // имело место критическая ошибка
             if (totalError >= 0.5) totalError = 1;
             else totalError *= 2;
         }
-
         return new RussianNumberParserResult((globalValue != null ? globalValue : 0) + (localValue != null ? localValue : 0), totalError);
     }
 
@@ -123,7 +129,7 @@ public class RussianNumber {
      * @param str     строковое представление
      * @param options настройки
      * @param level   уровень рекурсии
-     * @return
+     * @return Список токенов, которые удалось распознать
      */
     private static List<NumericToken> parseTokens(String str, RussianNumberParserOptions options, int level) {
 
@@ -370,7 +376,7 @@ public class RussianNumber {
      * перевести целое число в строку
      *
      * @param value число
-     * @return
+     * @return возвращает строковое значение для value
      */
     public static String getStringValue(long value) {
         return getStringValue(value, true);
