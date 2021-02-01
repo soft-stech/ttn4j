@@ -1,4 +1,4 @@
-import number.utils.RussianNumber;
+import ru.stech.ttn4j.number.utils.RussianNumber;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;

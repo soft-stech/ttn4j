@@ -1,6 +1,6 @@
-package number.utils;
+package ru.stech.ttn4j.number.utils;
 
-import number.utils.beans.RussianNumberTokens;
+import ru.stech.ttn4j.number.utils.beans.RussianNumberTokens;
 
 import java.util.*;
 

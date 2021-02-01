@@ -1,4 +1,4 @@
-package number.utils;
+package ru.stech.ttn4j.number.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

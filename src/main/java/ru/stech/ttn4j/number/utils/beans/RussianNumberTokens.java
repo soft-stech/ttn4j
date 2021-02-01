@@ -1,6 +1,6 @@
-package number.utils.beans;
+package ru.stech.ttn4j.number.utils.beans;
 
-import number.utils.Numeral;
+import ru.stech.ttn4j.number.utils.Numeral;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
