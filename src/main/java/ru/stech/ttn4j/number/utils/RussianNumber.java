@@ -54,7 +54,7 @@ public class RussianNumber {
             var value = tokenValue.getValue();
             var level = tokenValue.getLevel();
             var multiplier = tokenValue.isMultiplier();
-            if (level == -1) {
+            if (level == -1 && localValue != null) {
                 token.setSignificant(true);
                 var buf = localValue;
                 localValue = 0L;
