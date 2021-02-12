@@ -10,7 +10,7 @@ public class Numeral {
     /**
      * Значение
      */
-    private long value;
+    private String value;
 
     /**
      * Уровень
@@ -21,5 +21,4 @@ public class Numeral {
      * Признак множителя - тысяча, миллион и прочие числительные, умножаемые на коэффициент перед ними
      */
     private boolean isMultiplier;
-
 }
