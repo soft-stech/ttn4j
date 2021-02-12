@@ -57,7 +57,6 @@ class CVTests {
         System.out.println("passed");
     }
 
-
     @Test
     void numberTest() {
         var position = 1;
