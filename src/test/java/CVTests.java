@@ -3,6 +3,7 @@ import ru.stech.ttn4j.number.utils.RussianNumber;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
+import ru.stech.ttn4j.number.utils.interfaces.RussianNumberParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,6 +22,17 @@ class CVTests {
     private static ArrayList<TestData> testData = null;
 
     private final static int SIZE = 57;
+
+    static {
+        Class testsClass = CVTests.class;
+        try (InputStream inputStream = testsClass.getResourceAsStream("/TestData.txt")) {
+            testData = readFromInputStream(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public RussianNumberParser RussianNumber = new RussianNumber();
 
     @RepeatedTest(value = SIZE, name = "SimpleTest {currentRepetition}/{totalRepetitions}")
     void repeatedTests(RepetitionInfo repetitionInfo) {
@@ -44,7 +56,6 @@ class CVTests {
         assertEquals(value.Value, RussianNumber.parse(parsed).getValue());
         System.out.println("passed");
     }
-
 
     @Test
     void numberTest() {
@@ -72,7 +83,7 @@ class CVTests {
     }
 
     @Test
-    void CycleRun(){
+    void cycleRun(){
         for(int i = 0; i < 10000; i++){
             var value = new TestData(i, "");
             System.out.println("=====================");
@@ -84,13 +95,58 @@ class CVTests {
         }
     }
 
-    static {
-        Class testsClass = CVTests.class;
-        try (InputStream inputStream = testsClass.getResourceAsStream("/TestData.txt")) {
-            testData = readFromInputStream(inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    @RepeatedTest(value = 75, name = "MaskTest {currentRepetition}/{totalRepetitions}")
+    void repeatedMaskTests(RepetitionInfo repetitionInfo) {
+        var testNumber = testData.get(repetitionInfo.getCurrentRepetition() - 1);
+        System.out.println("=====================");
+        System.out.println(String.format("test[%d] - %d:%s", repetitionInfo.getCurrentRepetition(),testNumber.Value,testNumber.Text) );
+        var mask = new String(new char[Integer.valueOf(String.valueOf(testNumber.Value).length())]).replace("\0",".");
+        var parsed = RussianNumber.parseWithMask(testNumber.Text, mask);
+        assertEquals(parsed.stream().anyMatch(p -> p.getValue() == testNumber.Value), true);
+        System.out.println("passed");
+    }
+
+    @Test
+    void debugMaskMsisdnTest() {
+        var position = 76;
+        var regular = "********";
+        var value = testData.get(position - 1);
+        System.out.println("=====================");
+        System.out.println(String.format("%d:%s",value.Value,value.Text) );
+        var parsed = RussianNumber.parseWithMask(value.Text,regular);
+        assertEquals(parsed.get(0).getValue(),value.Value);
+    }
+
+    @Test
+    void maskMsisdnTest() {
+        var position = 72;
+        var regular = "89.........";
+        var value = testData.get(position - 1);
+        System.out.println("=====================");
+        System.out.println(String.format("%d:%s",value.Value,value.Text) );
+        var parsed = RussianNumber.parseWithMask(value.Text,regular);
+        assertEquals(parsed.get(0).getValue(),value.Value);
+    }
+
+    @Test
+    void maskJumpingLevelTest() {
+        var position = 74;
+        var value = testData.get(position - 1);
+        var regular = "...";
+        System.out.println("=====================");
+        System.out.println(String.format("%d:%s",value.Value,value.Text) );
+        var parsed = RussianNumber.parseWithMask(value.Text,regular);
+        assertEquals(parsed.get(0).getValue(),value.Value);
+    }
+
+    @Test
+    void withoutMaskTest() {
+        var position = 75;
+        var value = testData.get(position - 1);
+        System.out.println("=====================");
+        System.out.println(String.format("%d:%s",value.Value,value.Text) );
+        var parsed = RussianNumber.parseWithMask(value.Text,null);
+        assertEquals(parsed.size(),4);
     }
 
     private static ArrayList<TestData> readFromInputStream(InputStream inputStream)

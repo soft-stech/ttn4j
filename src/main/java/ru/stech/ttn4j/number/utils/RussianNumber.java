@@ -1,25 +1,143 @@
 package ru.stech.ttn4j.number.utils;
 
 import ru.stech.ttn4j.number.utils.beans.RussianNumberTokens;
+import ru.stech.ttn4j.number.utils.interfaces.RussianNumberParser;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class RussianNumber {
 
-    private RussianNumber() {
-        throw new IllegalStateException("Utility class");
-    }
+public class RussianNumber implements RussianNumberParser {
 
     private static final int MAX_TOKEN_LENGTH = 13;
 
-    public static RussianNumberParserResult parse(String text) {
+    public List<RussianNumberParserResult> parseWithMask(String text, String mask) {
+        List<RussianNumberParserResult> res;
+        boolean useMask = (mask == null || mask == "") ? false : true;
+
+        var options = new RussianNumberParserOptions();
+
+        var tokens = numericTokens(text, options);
+
+        if (tokens == null || tokens.isEmpty()) {
+            res = new ArrayList<>();
+        } else {
+            tokens = preparationTokens(tokens);
+            var globals = new ArrayList<GlobalValue>();
+            globals.add(new GlobalValue()
+                    .setValue(Long.valueOf(tokens.get(0).getNumeral().getValue()))
+                    .setCurrentLevel(Long.valueOf(tokens.get(0).getNumeral().getLevel())));// пошел главный обход
+            for (int i = 1; i < tokens.size(); i++) {
+                var token = tokens.get(i);
+                if (token.getError() > options.getMaxTokenError()) {
+                    continue;
+                }
+
+                var tokenValue = token.getNumeral();
+
+                var bufferOfGlobals = globals;
+                globals = new ArrayList<>();
+
+                for (GlobalValue bufferOfGlobal : bufferOfGlobals) {
+                    var variants = GetVariantsOfConcatenation(bufferOfGlobal, tokenValue);
+
+                    if (useMask) {
+                        variants.removeIf(v -> String.valueOf(v.getValue()).length() > mask.length());
+                    }
+
+                    globals.addAll(variants);
+                }
+            }
+            var goodVariants = useMask
+                    ? globals.stream().filter(g -> String.valueOf(g.getValue()).matches(mask)).collect(Collectors.toList())
+                    : globals;
+            var result = goodVariants.stream().map(g -> new RussianNumberParserResult(g.getValue())).collect(Collectors.toList());
+            res = result;
+        }
+
+        return res;
+    }
+
+    // Делает предобработку входной последовательности
+    // - схлопывает числа вида: три единицы (111)
+    private static List<NumericToken> preparationTokens(List<NumericToken> tokens)
+    {
+        var result = new ArrayList<NumericToken>();
+        result.add(tokens.get(0));
+
+        for(int i= 1; i< tokens.size(); i++)
+        {
+            if(tokens.get(i).getNumeral().getLevel() == -1)
+            {
+                // количество повторений
+                var firstNum = tokens.get(i-1).getNumeral().getValue();
+
+                // повторяющиеся цифры в числе
+                var dublicatedNum = tokens.get(i).getNumeral().getValue();
+
+                // изящный способ повторить строку
+                var repeated = new String(new char[Integer.valueOf(firstNum)]).replace("\0",dublicatedNum);
+
+                result.set(i-1, new NumericToken(
+                        new Numeral(
+                                repeated,
+                                -1,
+                                false
+                        )));
+                continue;
+            }
+            result.add(tokens.get(i));
+        }
+
+        return result;
+    }
+
+    private static ArrayList<GlobalValue> GetVariantsOfConcatenation(GlobalValue globalValue, Numeral tokenValue){
+        var result = new ArrayList<GlobalValue>();
+
+        // проверка на особые числа (пример: три единицы 111)
+        if(tokenValue.getLevel() == -1 || globalValue.getCurrentLevel() == -1)
+        {
+            result.add(new GlobalValue()
+                    .setValue(Long.valueOf(String.format("%s%s", globalValue.getValue().toString(), tokenValue.getValue())))
+                    .setCurrentLevel(tokenValue.getLevel()));
+            return result;
+        }
+
+        // проверка на множитель (пример : тысяч, сотен)
+        if (tokenValue.isMultiplier()) {
+            result.add(new GlobalValue()
+                    .setValue(globalValue.getValue() * Long.valueOf(tokenValue.getValue()))
+                    .setCurrentLevel(tokenValue.getLevel()));
+            return result;
+        }
+
+        Long concatenatedValue = Long.valueOf(String.format("%s%s", globalValue.getValue().toString(), tokenValue.getValue()));
+        if (globalValue.getCurrentLevel() > tokenValue.getLevel()) {
+            // создаем 2 варианта
+            result.add(new GlobalValue()
+                    .setValue(globalValue.getValue() + Long.valueOf(tokenValue.getValue()))
+                    .setCurrentLevel(tokenValue.getLevel()));
+            result.add(new GlobalValue()
+                    .setValue(concatenatedValue)
+                    .setCurrentLevel(tokenValue.getLevel()));
+            return result;
+        }
+
+        result.add(new GlobalValue()
+                .setValue(concatenatedValue)
+                .setCurrentLevel(tokenValue.getLevel()));
+        return result;
+    }
+
+    public RussianNumberParserResult parse(String text) {
         return parse(text, new RussianNumberParserOptions());
     }
 
     public static List<NumericToken> numericTokens(String text, RussianNumberParserOptions options) {
         // разбиваем текст на токены
         var stringTokens = text.split("\\s+");
-        var tokens = new ArrayList<NumericToken>(stringTokens.length);
+        ArrayList<NumericToken> tokens = new ArrayList<NumericToken>(stringTokens.length);
         // обрабатываем токены
         for (var item : stringTokens) {
             tokens.addAll(parseTokens(item, options, 0));
@@ -27,7 +145,7 @@ public class RussianNumber {
         return tokens;
     }
 
-    public static RussianNumberParserResult parse(String text, RussianNumberParserOptions options) {
+    public RussianNumberParserResult parse(String text, RussianNumberParserOptions options) {
         if (options == null) {
             options = new RussianNumberParserOptions();
         }
@@ -36,7 +154,6 @@ public class RussianNumber {
             return RussianNumberParserResult.getFailed();
         }
         text = text.trim().toLowerCase();
-
 
         // вспомогательные переменные
         Long globalLevel = null;
@@ -66,7 +183,7 @@ public class RussianNumber {
 
                 if (globalLevel == null || globalLevel > level) {
                     globalValue = (globalValue != null ? globalValue : 0)
-                            + (localValue != null ? localValue : 1) * value;
+                            + (localValue != null ? localValue : 1) * Long.valueOf(value);
 
                     globalLevel = level;
                     localValue = null;
@@ -82,7 +199,7 @@ public class RussianNumber {
             } else {
                 // простое числительное
                 if (localLevel == null || localLevel > level) {
-                    localValue = (localValue != null ? localValue : 0) + value;
+                    localValue = (localValue != null ? localValue : 0) + Long.valueOf(value);
                     localLevel = level;
 
                     token.setSignificant(true);
@@ -346,7 +463,7 @@ public class RussianNumber {
      * @param form2 форма существительного от двух до четырёх
      * @param form3 форма существительного от пяти и больше
      */
-    private static String getStringValue(long value, boolean male, String form1, String form2, String form3) {
+    private String getStringValue(long value, boolean male, String form1, String form2, String form3) {
         var n = value % 1000;
 
         if (n == 0) return "";
@@ -378,7 +495,7 @@ public class RussianNumber {
      * @param value число
      * @return возвращает строковое значение для value
      */
-    public static String getStringValue(long value) {
+    public String getStringValue(long value) {
         return getStringValue(value, true);
     }
 
@@ -389,7 +506,7 @@ public class RussianNumber {
      * @param capitalize указывает, что необходимо сделать первую букву заглавной
      * @return возвращает строковую запись числа
      */
-    public static String getStringValue(long value, boolean capitalize) {
+    public String getStringValue(long value, boolean capitalize) {
         boolean minus = value < 0;
         if (minus) value = -value;
 
