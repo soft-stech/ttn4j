@@ -1,6 +1,5 @@
 package ru.stech.ttn4j.number.utils;
 
-
 import lombok.Data;
 import lombok.experimental.Accessors;
 
