@@ -4,11 +4,8 @@ plugins {
     id 'maven'
 }
 
-sourceCompatibility = 11
-targetCompatibility = 11
-
 group 'ru.stech'
-version '0.0.9'
+version '0.0.10'
 
 repositories {
     mavenCentral()
