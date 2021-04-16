@@ -109,7 +109,7 @@ class CVTests {
     @Test
     void debugMaskMsisdnTest() {
         var position = 76;
-        var regular = "********";
+        var regular = "........";
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
