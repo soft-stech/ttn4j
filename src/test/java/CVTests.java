@@ -32,7 +32,7 @@ class CVTests {
         }
     }
 
-    public RussianNumberParser RussianNumber = new RussianNumber();
+    public RussianNumberParser russianNumber = new RussianNumber();
 
     @RepeatedTest(value = SIZE, name = "SimpleTest {currentRepetition}/{totalRepetitions}")
     void repeatedTests(RepetitionInfo repetitionInfo) {
@@ -40,7 +40,7 @@ class CVTests {
         var value = testData.get(repetitionInfo.getCurrentRepetition() - 1);
         System.out.println("=====================");
         System.out.println(String.format("test[%d] - %d:%s", repetitionInfo.getCurrentRepetition(),value.Value,value.Text) );
-        var parsed = RussianNumber.parse(value.Text);
+        var parsed = russianNumber.parse(value.Text);
         assertEquals(value.Value, parsed.getValue(), value.Text);
         System.out.println("passed");
     }
@@ -51,9 +51,9 @@ class CVTests {
         var value = testData.get(repetitionInfo.getCurrentRepetition() - 1);
         System.out.println("=====================");
         System.out.println(String.format("test[%d] - %d:%s", repetitionInfo.getCurrentRepetition(),value.Value,value.Text) );
-        var parsed = RussianNumber.getStringValue(value.Value);
+        var parsed = russianNumber.getStringValue(value.Value);
         System.out.println(String.format("number - %s: input - %s: out - %s",value.Value, value.Text, new String(parsed.getBytes(), UTF8_CHARSET)));
-        assertEquals(value.Value, RussianNumber.parse(parsed).getValue());
+        assertEquals(value.Value, russianNumber.parse(parsed).getValue());
         System.out.println("passed");
     }
 
@@ -63,7 +63,7 @@ class CVTests {
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
-        var parsed = RussianNumber.parse(value.Text);
+        var parsed = russianNumber.parse(value.Text);
         assertEquals(value.Value, parsed.getValue(), value.Text);
     }
 
@@ -88,9 +88,9 @@ class CVTests {
             var value = new TestData(i, "");
             System.out.println("=====================");
             System.out.printf("test[%d] - %d:%s%n", i ,value.Value,value.Text);
-            var parsed = RussianNumber.getStringValue(value.Value);
+            var parsed = russianNumber.getStringValue(value.Value);
             System.out.printf("number - %s: input - %s: out - %s%n",value.Value, value.Text, new String(parsed.getBytes(), UTF8_CHARSET));
-            assertEquals(value.Value, RussianNumber.parse(parsed).getValue());
+            assertEquals(value.Value, russianNumber.parse(parsed).getValue());
             System.out.println("passed");
         }
     }
@@ -101,7 +101,7 @@ class CVTests {
         System.out.println("=====================");
         System.out.println(String.format("test[%d] - %d:%s", repetitionInfo.getCurrentRepetition(),testNumber.Value,testNumber.Text) );
         var mask = new String(new char[Integer.valueOf(String.valueOf(testNumber.Value).length())]).replace("\0",".");
-        var parsed = RussianNumber.parseWithMask(testNumber.Text, mask);
+        var parsed = russianNumber.parseWithMask(testNumber.Text, mask);
         assertEquals(parsed.stream().anyMatch(p -> p.getValue() == testNumber.Value), true);
         System.out.println("passed");
     }
@@ -113,7 +113,7 @@ class CVTests {
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
-        var parsed = RussianNumber.parseWithMask(value.Text,regular);
+        var parsed = russianNumber.parseWithMask(value.Text,regular);
         assertEquals(parsed.get(0).getValue(),value.Value);
     }
 
@@ -124,7 +124,7 @@ class CVTests {
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
-        var parsed = RussianNumber.parseWithMask(value.Text,regular);
+        var parsed = russianNumber.parseWithMask(value.Text,regular);
         assertEquals(parsed.get(0).getValue(),value.Value);
     }
 
@@ -135,7 +135,7 @@ class CVTests {
         var regular = "...";
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
-        var parsed = RussianNumber.parseWithMask(value.Text,regular);
+        var parsed = russianNumber.parseWithMask(value.Text,regular);
         assertEquals(parsed.get(0).getValue(),value.Value);
     }
 
@@ -145,7 +145,7 @@ class CVTests {
         var value = testData.get(position - 1);
         System.out.println("=====================");
         System.out.println(String.format("%d:%s",value.Value,value.Text) );
-        var parsed = RussianNumber.parseWithMask(value.Text,null);
+        var parsed = russianNumber.parseWithMask(value.Text,null);
         assertEquals(parsed.size(),4);
     }
 
